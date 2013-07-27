@@ -5,26 +5,26 @@ set -o errexit
 set -o nounset
 
 if [ "$(id -u)" != "0" ]; then
-   echo "The install script should be run as root" 1>&2
-   exit 1
+  echo "The install script should be run as root" 1>&2
+  exit 1
 fi
 
 # Check which version this is
 wrong_version () {
-	echo "This installer is for Ubuntu 12.04 \"Precise\""
-	echo "It is not compatible with your system"
-	exit 1
+  echo "This installer is for Ubuntu 12.04 \"Precise\""
+  echo "It is not compatible with your system"
+  exit 1
 }
 LSB_RELEASE=/etc/lsb-release
 
 if [ ! -f $LSB_RELEASE ]; then
-	wrong_version
+  wrong_version
 fi
 
 source $LSB_RELEASE || wrong_version
 
 if [ $DISTRIB_ID != "Ubuntu" ] || [ $DISTRIB_RELEASE != "12.04" ]; then
-	wrong_version
+  wrong_version
 fi
 
 # Import our trap lib
@@ -271,20 +271,20 @@ echo "==========================="
 echo
 cat > /etc/apache2/sites-available/scalr << EOF
 <VirtualHost *:80>
-    ServerName scalr.mydomain.com
-    ServerAdmin scalr@mydomain.com
-    DocumentRoot $SCALR_APP/www
- 
-    <Directory $SCALR_APP/www>
-        Options -Indexes FollowSymLinks MultiViews
-        AllowOverride All
-        Order allow,deny
-        allow from all
-    </Directory>
- 
-    ErrorLog $SCALR_LOG_DIR/scalr-error.log
-    CustomLog $SCALR_LOG_DIR/scalr-access.log combined
-    LogLevel warn
+ServerName scalr.mydomain.com
+ServerAdmin scalr@mydomain.com
+DocumentRoot $SCALR_APP/www
+
+<Directory $SCALR_APP/www>
+Options -Indexes FollowSymLinks MultiViews
+AllowOverride All
+Order allow,deny
+allow from all
+</Directory>
+
+ErrorLog $SCALR_LOG_DIR/scalr-error.log
+CustomLog $SCALR_LOG_DIR/scalr-access.log combined
+LogLevel warn
 </VirtualHost>
 EOF
 
@@ -333,7 +333,7 @@ echo
 apt-get install -y hashalot
 HASHED_PASSWORD=`echo $SCALR_ADMIN_PASSWORD | sha256 -x`
 mysql --defaults-extra-file=$MYSQL_CLIENT_FILE --database=$SCALR_MYSQL_DB \
-	--execute="UPDATE account_users SET password='$HASHED_PASSWORD' WHERE id=1"
+  --execute="UPDATE account_users SET password='$HASHED_PASSWORD' WHERE id=1"
 
 echo
 echo "==========================="
