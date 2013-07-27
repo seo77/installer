@@ -352,4 +352,10 @@ echo
 echo "You may log in using the credentials:"
 echo "Username: admin"
 echo "Password: $SCALR_ADMIN_PASSWORD"
+
 echo
+echo "==================================="
+echo "    Next steps                     "
+echo "==================================="
+echo
+echo "You should configure security settings in $SCALR_APP/etc/config.yml"
