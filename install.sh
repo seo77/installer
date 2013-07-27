@@ -76,24 +76,27 @@ echo "    Creating Passwords    "
 echo "=========================="
 echo
 apt-get install -y pwgen
-PASSWORDS=~/scalr-passwords
-mkdir -p $PASSWORDS
-MYSQL_PWFILE=$PASSWORDS/root-mysql
-pwgen -s 40 > $MYSQL_PWFILE
-ROOT_MYSQL=`cat $MYSQL_PWFILE`
+
+# MySQL root password
+ROOT_MYSQL=`pwgen -s 40`
 echo mysql-server-5.5 mysql-server/root_password password $ROOT_MYSQL | debconf-set-selections
 echo mysql-server-5.5 mysql-server/root_password_again password $ROOT_MYSQL | debconf-set-selections
-MYSQL_CLIENT_FILE=$PASSWORDS/root-mysql-client
+
+# Securely authenticate to MySQL
+MYSQL_CLIENT_FILE=~/$$-root-mysql-client
 echo "[client]" > $MYSQL_CLIENT_FILE
+chmod 600 $MYSQL_CLIENT_FILE
 echo "user=root" >> $MYSQL_CLIENT_FILE
 echo "password=$ROOT_MYSQL" >> $MYSQL_CLIENT_FILE
-chmod 600 $MYSQL_CLIENT_FILE
+trap "rm $MYSQL_CLIENT_FILE; exit" INT TERM EXIT  # Remove the auth file when exiting
 
-SCALR_PWFILE=$PASSWORDS/scalr-mysql
-pwgen -s 40 > $SCALR_PWFILE
+# Scalr MySQL user
 SCALR_MYSQL_USERNAME=scalr
-SCALR_MYSQL_PASSWORD=`cat $SCALR_PWFILE`
+SCALR_MYSQL_PASSWORD=`pwgen -s 40`
 SCALR_MYSQL_DB=scalr
+
+# Scalr admin user
+SCALR_ADMIN_PASSWORD=`pwgen 20`
 
 # Install MySQL
 echo
@@ -294,7 +297,28 @@ crontab -u $SCALR_USER $CRON_FILE
 rm $CRON_FILE
 
 echo
+echo "==========================="
+echo "    Configuring Users     "
+echo "==========================="
+echo
+apt-get install -y hashalot
+HASHED_PASSWORD=`echo $SCALR_ADMIN_PASSWORD | sha256 -x`
+mysql --defaults-extra-file=$MYSQL_CLIENT_FILE --database=$SCALR_MYSQL_DB \
+	--execute="UPDATE account_users SET password='$HASHED_PASSWORD' WHERE id=1"
+
+echo
 echo "=============================="
 echo "    Done Installing Scalr     "
 echo "=============================="
 echo
+
+echo "Scalr was installed to:      $SCALR_INSTALL"
+echo "Scalr is running under user: $SCALR_USER"
+echo
+echo "Passwords have automatically been generated"
+echo "MySQL root:$ROOT_MYSQL"
+echo "MySQL $SCALR_MYSQL_USERNAME:$SCALR_MYSQL_PASSWORD"
+echo
+echo "You may log in using the credentials:"
+echo "Username: admin"
+echo "Password: $SCALR_ADMIN_PASSWORD"
