@@ -10,47 +10,74 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 # Add latest PHP repo
-echo "--- Installing PHP"
+echo
+echo "======================"
+echo "    Installing PHP    "
+echo "======================"
+echo
+
 add-apt-repository -y ppa:ondrej/php5
 apt-get update && apt-get upgrade -y
 apt-get install -y php5 php5-mysql php5-curl php-pear php5-mcrypt php5-snmp
 
 # Install common dependencies for PECL packages
-echo "--- Installing PECL dependencies"
+echo
+echo "===================================="
+echo "    Installing PECL Dependencies    "
+echo "===================================="
+echo
 apt-get install -y build-essential php5-dev libmagic-dev php-pear
 
 # Install PECL HTTP
-echo "--- Installing PECL HTTP"
+echo
+echo "============================"
+echo "    Installing PECL HTTP    "
+echo "============================"
+echo
 apt-get install -y libcurl3 libcurl4-gnutls-dev
-pecl install -f pecl_http
+pecl install pecl_http || true
 echo extension=http.so > /etc/php5/conf.d/30-http.ini
 
 # Install PECL RRD
-echo "--- Installing PECL RRD"
+echo
+echo "==========================="
+echo "    Installing PECL RRD    "
+echo "==========================="
+echo
 apt-get install -y librrd-dev
-pecl install -f rrd
+pecl install rrd || true
 echo extension=rrd.so > /etc/php5/conf.d/40-rrd.ini
 
 # Install PECL YAML
-echo "--- Installing PECL YAML"
+echo
+echo "============================"
+echo "    Installing PECL YAML    "
+echo "============================"
+echo
 apt-get install -y libyaml-dev
-pecl install -f yaml
+pecl install yaml || true
 echo extension=yaml.so > /etc/php5/conf.d/50-yaml.ini
 
 # Install PECL SSH
-echo "--- Installing PECL SSH"
+echo
+echo "==========================="
+echo "    Installing PECL SSH    "
+echo "==========================="
+echo
 apt-get install -y libssh2-1-dev 
-pecl install -f ssh2-beta
+pecl install ssh2-beta || true
 echo extension=ssh2.so > /etc/php5/conf.d/60-ssh2.ini
 
 
 # Passwords
+echo
+echo "=========================="
+echo "    Creating Passwords    "
+echo "=========================="
+echo
 apt-get install -y pwgen
 PASSWORDS=~/scalr-passwords
-echo "--- Creating passwords dir at $PASSWORDS"
 mkdir -p $PASSWORDS
-
-echo "--- Generating Root MySQL password"
 MYSQL_PWFILE=$PASSWORDS/root-mysql
 pwgen -s 40 > $MYSQL_PWFILE
 ROOT_MYSQL=`cat $MYSQL_PWFILE`
@@ -62,7 +89,6 @@ echo "user=root" >> $MYSQL_CLIENT_FILE
 echo "password=$ROOT_MYSQL" >> $MYSQL_CLIENT_FILE
 chmod 600 $MYSQL_CLIENT_FILE
 
-echo "--- Generating Scalr MySQL password"
 SCALR_PWFILE=$PASSWORDS/scalr-mysql
 pwgen -s 40 > $SCALR_PWFILE
 SCALR_MYSQL_USERNAME=scalr
@@ -70,14 +96,22 @@ SCALR_MYSQL_PASSWORD=`cat $SCALR_PWFILE`
 SCALR_MYSQL_DB=scalr
 
 # Install MySQL
-echo "--- Installing MySQL"
+echo
+echo "========================"
+echo "    Installing MySQL    "
+echo "========================"
+echo
 apt-get install -y mysql-server
 mysql --defaults-extra-file=$MYSQL_CLIENT_FILE --execute="CREATE DATABASE $SCALR_MYSQL_DB;"
 mysql --defaults-extra-file=$MYSQL_CLIENT_FILE --execute="GRANT ALL on $SCALR_MYSQL_DB.* to '$SCALR_MYSQL_USERNAME'@'localhost' IDENTIFIED BY '$SCALR_MYSQL_PASSWORD'"
 
 
 # Install Scalr
-echo "--- Installing Scalr"
+echo
+echo "========================"
+echo "    Installing Scalr    "
+echo "========================"
+echo
 SCALR_REPO=https://github.com/Scalr/scalr.git
 SCALR_INSTALL=/var/scalr
 SCALR_APP=$SCALR_INSTALL/app
@@ -92,12 +126,20 @@ python setup.py install
 cd $curr_dir
 
 # Configure database
-echo "--- Loading database structure"
+echo
+echo "==================================="
+echo "    Configuring Scalr Database     "
+echo "==================================="
+echo
 mysql --defaults-extra-file=$MYSQL_CLIENT_FILE --database=$SCALR_MYSQL_DB < $SCALR_SQL/structure.sql
 mysql --defaults-extra-file=$MYSQL_CLIENT_FILE --database=$SCALR_MYSQL_DB < $SCALR_SQL/data.sql
 
 # Configure Scalr
-echo "--- Configuring Scalr"
+echo
+echo "=========================="
+echo "    Configuring Scalr     "
+echo "=========================="
+echo
 
 SCALR_USER=www-data
 SCALR_LOG_DIR="/var/log/scalr"
@@ -190,7 +232,11 @@ scalr:
 EOF
 
 # Install Virtualhost
-echo "--- Configuring Apache"
+echo
+echo "==========================="
+echo "    Configuring Apache     "
+echo "==========================="
+echo
 cat > /etc/apache2/sites-available/scalr << EOF
 <VirtualHost *:80>
     ServerName scalr.mydomain.com
@@ -216,7 +262,11 @@ a2ensite scalr
 service apache2 restart
 
 # Install crontab
-echo "--- Installing crontab for $SCALR_USER"
+echo
+echo "============================="
+echo "    Configuring Cronjobs     "
+echo "============================="
+echo
 CRON_FILE=/tmp/$$-scalr-cron
 crontab -u $SCALR_USER -l > $CRON_FILE.bak || true  # Back up, ignore errors
 
@@ -242,3 +292,9 @@ EOF
 
 crontab -u $SCALR_USER $CRON_FILE
 rm $CRON_FILE
+
+echo
+echo "=============================="
+echo "    Done Installing Scalr     "
+echo "=============================="
+echo
