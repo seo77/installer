@@ -35,7 +35,7 @@ echo "    Installing PECL HTTP    "
 echo "============================"
 echo
 apt-get install -y libcurl3 libcurl4-gnutls-dev
-pecl install pecl_http || true
+printf "\n\n\n\n" | pecl install pecl_http || true  # We need to "accept" the prompts.
 echo extension=http.so > /etc/php5/conf.d/30-http.ini
 
 # Install PECL RRD
@@ -55,7 +55,7 @@ echo "    Installing PECL YAML    "
 echo "============================"
 echo
 apt-get install -y libyaml-dev
-pecl install yaml || true
+printf "\n" | pecl install yaml || true
 echo extension=yaml.so > /etc/php5/conf.d/50-yaml.ini
 
 # Install PECL SSH
@@ -65,7 +65,7 @@ echo "    Installing PECL SSH    "
 echo "==========================="
 echo
 apt-get install -y libssh2-1-dev 
-pecl install ssh2-beta || true
+printf "\n" | pecl install ssh2-beta || true
 echo extension=ssh2.so > /etc/php5/conf.d/60-ssh2.ini
 
 
