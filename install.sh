@@ -377,3 +377,4 @@ echo "    Next steps                     "
 echo "==================================="
 echo
 echo "You should configure security settings in $SCALR_APP/etc/config.yml"
+echo "Scalr is available on this server on port 80"
