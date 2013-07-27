@@ -9,6 +9,24 @@ if [ "$(id -u)" != "0" ]; then
    exit 1
 fi
 
+# Check which version this is
+wrong_version () {
+	echo "This installer is for Ubuntu 12.04 \"Precise\""
+	echo "It is not compatible with your system"
+	exit 1
+}
+LSB_RELEASE=/etc/lsb-release
+
+if [ ! -f $LSB_RELEASE ]; then
+	wrong_version
+fi
+
+source $LSB_RELEASE || wrong_version
+
+if [ $DISTRIB_ID != "Ubuntu" ] || [ $DISTRIB_RELEASE != "12.04" ]; then
+	wrong_version
+fi
+
 # Import our trap lib
 source libtrap.sh
 
