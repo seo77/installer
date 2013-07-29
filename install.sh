@@ -37,6 +37,7 @@ echo "    Installing PHP    "
 echo "======================"
 echo
 
+apt-get install -y python-software-properties
 add-apt-repository -y ppa:ondrej/php5
 apt-get update && apt-get upgrade -y
 apt-get install -y php5 php5-mysql php5-curl php-pear php5-mcrypt php5-snmp
