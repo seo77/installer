@@ -109,7 +109,7 @@ MYSQL_CLIENT_FILE=~/$$-root-mysql-client
 echo "[client]" > $MYSQL_CLIENT_FILE
 chmod 600 $MYSQL_CLIENT_FILE
 set +o nounset  # The trap lib uses eval and dynamic variable names
-trap_push "rm $MYSQL_CLIENT_FILE" SIGINT SIGTERM EXIT  # Remove the auth file when exiting
+trap_append "rm $MYSQL_CLIENT_FILE" SIGINT SIGTERM EXIT  # Remove the auth file when exiting
 set -o nounset
 echo "user=root" >> $MYSQL_CLIENT_FILE
 echo "password=$ROOT_MYSQL" >> $MYSQL_CLIENT_FILE
@@ -346,7 +346,7 @@ CRYPTOKEY_PATH=$SCALR_APP/etc/.cryptokey
 touch $CRYPTOKEY_PATH
 chown $SCALR_USER:$SCALR_USER $CRYPTOKEY_PATH
 set +o nounset
-trap_push "chown root:root $CRYPTOKEY_PATH" SIGINT SIGTERM EXIT  # Restore ownership of the cryptokey
+trap_append "chown root:root $CRYPTOKEY_PATH" SIGINT SIGTERM EXIT  # Restore ownership of the cryptokey
 set -o nounset
 sudo -u www-data php $SCALR_APP/www/testenvironment.php || true # We don't want to exit on an error
 
