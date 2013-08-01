@@ -86,7 +86,7 @@ echo "==========================="
 echo "    Installing PECL SSH    "
 echo "==========================="
 echo
-apt-get install -y libssh2-1-dev 
+apt-get install -y libssh2-1-dev
 printf "\n" | pecl install ssh2-beta || true
 echo extension=ssh2.so > /etc/php5/conf.d/60-ssh2.ini
 
@@ -199,7 +199,7 @@ scalr:
   pma_instance_ip_address: '127.0.0.1'
   auth_mode: scalr
   instances_connection_policy: public
-  allowed_clouds: 
+  allowed_clouds:
    - ec2
    - openstack
    - cloudstack
@@ -214,7 +214,7 @@ scalr:
     host: 'endpoint url here'
   aws:
     security_group_name: 'scalr.ip-pool'
-    ip_pool: ['8.8.8.8'] 
+    ip_pool: ['8.8.8.8/32']
     security_group_prefix: 'scalr.'
   billing:
     enabled: no
@@ -237,7 +237,7 @@ scalr:
       nameservers: ['ns1.example.net', 'ns2.example.net', 'ns3.example.net', 'ns4.example.net']
       default_domain_name: 'provide.domain.here.in'
   msg_sender:
-    connections: 
+    connections:
       mysql:
         <<: *connections_mysql
         driver: 'mysql+pymysql'
@@ -247,7 +247,7 @@ scalr:
     log_file: "$SCALR_LOG_DIR/messaging.log"
     pid_file: "$SCALR_PID_DIR/messaging.pid"
   stats_poller:
-    connections: 
+    connections:
       mysql:
         <<: *connections_mysql
         driver: 'mysql+pymysql'
