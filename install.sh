@@ -11,7 +11,7 @@ fi
 
 # Check which version this is
 wrong_version () {
-  echo "This installer is for Ubuntu 12.04 \"Precise\""
+  echo "This installer is for Ubuntu 12.04 \"Precise\" and up"
   echo "It is not compatible with your system"
   exit 1
 }
