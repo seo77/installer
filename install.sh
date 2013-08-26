@@ -11,7 +11,7 @@ fi
 
 # Check which version this is
 wrong_version () {
-  echo "This installer is for Ubuntu 12.04 \"Precise\""
+  echo "This installer is for Ubuntu 12.04 \"Precise\" and up"
   echo "It is not compatible with your system"
   exit 1
 }
@@ -26,6 +26,18 @@ source $LSB_RELEASE || wrong_version
 if [ $DISTRIB_ID != "Ubuntu" ] || [ "$DISTRIB_RELEASE" '<' "12.04" ]; then
   wrong_version
 fi
+
+# Check we are on a supported Kernel
+KERNEL_UNSUPPORTED_MIN=2.6.30
+KERNEL_UNSUPPORTED_MAX=2.6.39
+KERNEL_VERSION=`uname -r`
+
+if [ ! "$KERNEL_VERSION" '<' "$KERNEL_UNSUPPORTED_MIN" ] && [ ! "$KERNEL_VERSION" '>' "$KERNEL_UNSUPPORTED_MAX" ] ; then
+  echo "Scalr does not support Linux Kernels $KERNEL_UNSUPPORTED_MIN to $KERNEL_UNSUPPORTED_MAX"
+  echo "Please consider upgrading your Kernel."
+  exit 1
+fi
+
 
 # Import our trap lib
 source libtrap.sh
