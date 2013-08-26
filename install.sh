@@ -23,7 +23,7 @@ fi
 
 source $LSB_RELEASE || wrong_version
 
-if [ $DISTRIB_ID != "Ubuntu" ] || [ $DISTRIB_RELEASE != "12.04" ]; then
+if [ $DISTRIB_ID != "Ubuntu" ] || [ "$DISTRIB_RELEASE" '<' "12.04" ]; then
   wrong_version
 fi
 
@@ -286,7 +286,11 @@ echo "==========================="
 echo "    Configuring Apache     "
 echo "==========================="
 echo
-cat > /etc/apache2/sites-available/scalr.conf << EOF
+
+SCALR_SITE_NAME=scalr
+SCALR_SITE_PATH=/etc/apache2/sites-available/$SCALR_SITE_NAME
+
+cat > $SCALR_SITE_PATH << EOF
 <VirtualHost *:80>
 ServerName scalr.mydomain.com
 ServerAdmin scalr@mydomain.com
@@ -307,8 +311,14 @@ LogLevel warn
 EOF
 
 a2enmod rewrite
-a2dissite default || a2dissite 000-default
-a2ensite scalr
+
+# Disable all Apache default sites, however they're called
+a2dissite default || true
+a2dissite 000-default || true
+
+# Try adding our site, whichever configuration works
+a2ensite $SCALR_SITE_NAME || mv $SCALR_SITE_PATH $SCALR_SITE_PATH.conf && a2ensite $SCALR_SITE_NAME
+
 service apache2 restart
 
 # Install crontab
