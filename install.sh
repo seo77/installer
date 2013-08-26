@@ -58,7 +58,8 @@ echo "============================"
 echo
 apt-get install -y libcurl3 libcurl4-gnutls-dev
 printf "\n\n\n\n" | pecl install pecl_http || true  # We need to "accept" the prompts.
-echo extension=http.so > /etc/php5/conf.d/30-http.ini
+echo extension=http.so > /etc/php5/mods-available/http.ini
+php5enmod http
 
 # Install PECL RRD
 echo
@@ -68,7 +69,8 @@ echo "==========================="
 echo
 apt-get install -y librrd-dev
 pecl install rrd || true
-echo extension=rrd.so > /etc/php5/conf.d/40-rrd.ini
+echo extension=rrd.so > /etc/php5/mods-available/rrd.ini
+php5enmod rrd
 
 # Install PECL YAML
 echo
@@ -78,7 +80,8 @@ echo "============================"
 echo
 apt-get install -y libyaml-dev
 printf "\n" | pecl install yaml || true
-echo extension=yaml.so > /etc/php5/conf.d/50-yaml.ini
+echo extension=yaml.so > /etc/php5/mods-available/yaml.ini
+php5enmod yaml
 
 # Install PECL SSH
 echo
@@ -88,8 +91,21 @@ echo "==========================="
 echo
 apt-get install -y libssh2-1-dev
 printf "\n" | pecl install ssh2-beta || true
-echo extension=ssh2.so > /etc/php5/conf.d/60-ssh2.ini
+echo extension=ssh2.so > /etc/php5/mods-available/ssh2.ini
+php5enmod ssh2
 
+# Disable disabled functions
+echo
+echo "==========================="
+echo "   Changing PHP settings   "
+echo "==========================="
+echo
+echo "removing disabled functions"
+sed -i '/^disable_functions/d' /etc/php5/apache2/php.ini
+sed -i '/^disable_functions/d' /etc/php5/cli/php.ini
+echo "enabling short open tags"
+sed -i -r 's/short_open_tag = .+/short_open_tag = On/g' /etc/php5/apache2/php.ini
+sed -i -r 's/short_open_tag = .+/short_open_tag = On/g' /etc/php5/cli/php.ini
 
 # Passwords
 echo
@@ -270,17 +286,18 @@ echo "==========================="
 echo "    Configuring Apache     "
 echo "==========================="
 echo
-cat > /etc/apache2/sites-available/scalr << EOF
+cat > /etc/apache2/sites-available/scalr.conf << EOF
 <VirtualHost *:80>
 ServerName scalr.mydomain.com
 ServerAdmin scalr@mydomain.com
 DocumentRoot $SCALR_APP/www
 
 <Directory $SCALR_APP/www>
-Options -Indexes FollowSymLinks MultiViews
+Options -Indexes +FollowSymLinks +MultiViews
 AllowOverride All
 Order allow,deny
 allow from all
+Require all granted
 </Directory>
 
 ErrorLog $SCALR_LOG_DIR/scalr-error.log
@@ -290,7 +307,7 @@ LogLevel warn
 EOF
 
 a2enmod rewrite
-a2dissite default
+a2dissite default || a2dissite 000-default
 a2ensite scalr
 service apache2 restart
 
