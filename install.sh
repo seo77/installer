@@ -416,5 +416,7 @@ echo "==================================="
 echo "    Next steps                     "
 echo "==================================="
 echo
-echo "You should configure security settings in $SCALR_APP/etc/config.yml"
-echo "Scalr is available on this server on port 80"
+
+echo "1. Some optional modules have not been installed: RRD, DNS, and LDAP"
+echo "2. You should configure security settings in $SCALR_APP/etc/config.yml"
+echo "3. Scalr is available on this server on port 80"
