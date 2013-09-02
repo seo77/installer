@@ -387,7 +387,7 @@ chown $SCALR_USER:$SCALR_USER $CRYPTOKEY_PATH
 set +o nounset
 trap_append "chown root:root $CRYPTOKEY_PATH" SIGINT SIGTERM EXIT  # Restore ownership of the cryptokey
 set -o nounset
-sudo -u www-data php $SCALR_APP/www/testenvironment.php || true # We don't want to exit on an error
+sudo -u $SCALR_USER php $SCALR_APP/www/testenvironment.php || true # We don't want to exit on an error
 
 
 echo
