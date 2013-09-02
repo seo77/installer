@@ -412,13 +412,15 @@ pre-start script
   chown $SCALR_USER:$SCALR_USER $SCALR_PID_DIR
 end script
 
-exec start-stop-daemon --start -c $SCALR_USER --pidfile $daemon_pidfile --exec $daemon_proc -- $daemon_args
+exec start-stop-daemon --start --chuid $SCALR_USER --pidfile $daemon_pidfile --exec $daemon_proc -- $daemon_args
 EOF
 # We can't use setuid / setgid: we need pre-start to run as root.
 }
 
-prepare_init "$POLLER_NAME" "Scalr Stats Poller Daemon" "$POLLER_PID" "python" "-m scalrpy.stats_poller -c $SCALR_CONFIG_FILE -i 120 --start"
-prepare_init "$POLLER_NAME" "Scalr Messaging Daemon" "$MESSAGING_PID" "python" "-m scalrpy.messaging -c $SCALR_CONFIG_FILE --start"
+PYTHON=`command -v python`
+
+prepare_init "$POLLER_NAME" "Scalr Stats Poller Daemon" "$POLLER_PID" "$PYTHON" "-m scalrpy.stats_poller -c $SCALR_CONFIG_FILE --start --interval 120"
+prepare_init "$MESSAGING_NAME" "Scalr Messaging Daemon" "$MESSAGING_PID" "$PYTHON" "-m scalrpy.messaging -c $SCALR_CONFIG_FILE --start"
 
 service $POLLER_NAME start
 service $MESSAGING_NAME start
