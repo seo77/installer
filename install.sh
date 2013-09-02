@@ -398,6 +398,7 @@ pre-start script
     exit 1
   fi
   mkdir -p $SCALR_PID_DIR
+  chown $SCALR_USER:$SCALR_USER $SCALR_PID_DIR
 end script
 
 script
