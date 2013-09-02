@@ -385,8 +385,9 @@ INIT_DIR=/etc/init
 prepare_init () {
   local daemon_name=$1
   local daemon_desc=$2
-  local daemon_invoke=$3
-  local daemon_pidfile=$4
+  local daemon_pidfile=$3
+  local daemon_proc=$4
+  local daemon_args=$5
 
 
   cat > $INIT_DIR/$daemon_name.conf << EOF
@@ -411,16 +412,16 @@ pre-start script
   chown $SCALR_USER:$SCALR_USER $SCALR_PID_DIR
 end script
 
-exec start-stop-daemon --start -c $SCALR_USER --exec $daemon_invoke --pidfile $daemon_pidfile
+exec start-stop-daemon --start -c $SCALR_USER --pidfile $daemon_pidfile --exec $daemon_proc -- $daemon_args
 EOF
 # We can't use setuid / setgid: we need pre-start to run as root.
 }
 
-prepare_init "$POLLER_NAME" "Scalr Stats Poller Daemon" "python -m scalrpy.stats_poller -c $SCALR_CONFIG_FILE -i 120 --start" $POLLER_PID
-prepare_init "$MESSAGING_NAME" "Scalr Messaging Daemon" "python -m scalrpy.messaging -c $SCALR_CONFIG_FILE --start" $MESSAGING_PID
+prepare_init "$POLLER_NAME" "Scalr Stats Poller Daemon" "$POLLER_PID" "python" "-m scalrpy.stats_poller -c $SCALR_CONFIG_FILE -i 120 --start"
+prepare_init "$POLLER_NAME" "Scalr Messaging Daemon" "$MESSAGING_PID" "python" "-m scalrpy.messaging -c $SCALR_CONFIG_FILE --start"
 
-service scalr-poller start
-service scalr-messager start
+service $POLLER_NAME start
+service $MESSAGING_NAME start
 
 echo
 echo "==========================="
