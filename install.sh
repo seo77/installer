@@ -214,6 +214,15 @@ mkdir -p $SCALR_LOG_DIR $SCALR_PID_DIR
 touch $SCALR_ID_FILE
 chown $SCALR_USER:$SCALR_USER $SCALR_LOG_DIR $SCALR_PID_DIR $SCALR_ID_FILE
 
+# Process "names" for Python scripts (useful later for start-stop-daemon matching)
+POLLER_NAME=poller
+POLLER_LOG=$SCALR_LOG_DIR/$POLLER_NAME.log
+POLLER_PID=$SCALR_PID_DIR/$POLLER_NAME.pid
+
+MESSAGING_NAME=messaging
+MESSAGING_LOG=$SCALR_LOG_DIR/$MESSAGING_NAME.log
+MESSAGING_PID=$SCALR_PID_DIR/$MESSAGING_NAME.pid
+
 cat > $SCALR_CONFIG_FILE << EOF
 scalr:
   connections:
@@ -274,8 +283,8 @@ scalr:
         pool_recycle: 120
         pool_size: 10
     pool_size: 50
-    log_file: "$SCALR_LOG_DIR/messaging.log"
-    pid_file: "$SCALR_PID_DIR/messaging.pid"
+    log_file: "$MESSAGING_LOG"
+    pid_file: "$MESSAGING_PID"
   stats_poller:
     connections:
       mysql:
@@ -290,8 +299,8 @@ scalr:
     rrd_db_dir: '/tmp/rrd_db_dir'
     images_path: '/var/www/graphics'
     graphics_url: 'http://example.com/graphics'
-    log_file: '$SCALR_LOG_DIR/stats-poller.log'
-    pid_file: '$SCALR_PID_DIR/stats-poller.pid'
+    log_file: "$POLLER_LOG"
+    pid_file: "$POLLER_PID"
 EOF
 
 # Install Virtualhost
@@ -377,6 +386,7 @@ prepare_init () {
   local daemon_name=$1
   local daemon_desc=$2
   local daemon_invoke=$3
+  local daemon_pidfile=$4
 
 
   cat > $INIT_DIR/$daemon_name.conf << EOF
@@ -401,15 +411,13 @@ pre-start script
   chown $SCALR_USER:$SCALR_USER $SCALR_PID_DIR
 end script
 
-script
-  sudo -u $SCALR_USER $daemon_invoke
-end script
+exec start-stop-daemon --start -c $SCALR_USER --exec $daemon_invoke --pidfile $daemon_pidfile
 EOF
 # We can't use setuid / setgid: we need pre-start to run as root.
 }
 
-prepare_init "scalr-poller" "Scalr Stats Poller Daemon" "python -m scalrpy.stats_poller -c $SCALR_CONFIG_FILE -i 120 --start"
-prepare_init "scalr-messager" "Scalr Messaging Daemon" "python -m scalrpy.messaging -c $SCALR_CONFIG_FILE --start"
+prepare_init "$POLLER_NAME" "Scalr Stats Poller Daemon" "python -m scalrpy.stats_poller -c $SCALR_CONFIG_FILE -i 120 --start" $POLLER_PID
+prepare_init "$MESSAGING_NAME" "Scalr Messaging Daemon" "python -m scalrpy.messaging -c $SCALR_CONFIG_FILE --start" $MESSAGING_PID
 
 service scalr-poller start
 service scalr-messager start
