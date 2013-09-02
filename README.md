@@ -13,7 +13,7 @@ Log in to the server you'd like to install Scalr on, and run the following
 commands, preferably as root.
 
     curl https://raw.github.com/Scalr/installer/master/install.sh > install.sh
-    curl https://raw.github.com/Scalr/installer/master/install.sh > libtrap.sh
+    curl https://raw.github.com/Scalr/installer/master/libtrap.sh > libtrap.sh
 
 
 ### Install ###
