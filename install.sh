@@ -207,13 +207,14 @@ echo
 SCALR_LOG_DIR="/var/log/scalr"
 SCALR_PID_DIR="/var/run/scalr"
 SCALR_ID_FILE=$SCALR_APP/etc/id
+SCALR_CONFIG_FILE=$SCALR_APP/etc/config.yml
 
 # Required folders and files
 mkdir -p $SCALR_LOG_DIR $SCALR_PID_DIR
 touch $SCALR_ID_FILE
 chown $SCALR_USER:$SCALR_USER $SCALR_LOG_DIR $SCALR_PID_DIR $SCALR_ID_FILE
 
-cat > $SCALR_APP/etc/config.yml << EOF
+cat > $SCALR_CONFIG_FILE << EOF
 scalr:
   connections:
     mysql: &connections_mysql
@@ -340,7 +341,7 @@ echo "============================="
 echo "    Configuring Cronjobs     "
 echo "============================="
 echo
-CRON_FILE=/tmp/$$-scalr-cron
+CRON_FILE=/tmp/$$-scalr-cron  #TODO: Fix insecure race condition on creation here
 crontab -u $SCALR_USER -l > $CRON_FILE.bak || true  # Back up, ignore errors
 
 cat > $CRON_FILE << EOF
@@ -359,12 +360,58 @@ cat > $CRON_FILE << EOF
 */2 * * * * /usr/bin/php -q $SCALR_APP/cron/cron.php --EBSManager
 */20 * * * * /usr/bin/php -q $SCALR_APP/cron/cron.php --RolesQueue
 */5 * * * * /usr/bin/php -q $SCALR_APP/cron-ng/cron.php --DbMsrMaintenance
-*/5 * * * * python -m scalrpy.stats_poller -c $SCALR_APP/etc/config.yml -i 120 --start
-*/5 * * * * python -m scalrpy.messaging -c $SCALR_APP/etc/config.yml --start
 EOF
 
 crontab -u $SCALR_USER $CRON_FILE
 rm $CRON_FILE
+
+echo
+echo "===================================="
+echo "    Configuring Daemon Services     "
+echo "===================================="
+echo
+
+INIT_DIR=/etc/init
+
+prepare_init () {
+  local daemon_name=$1
+  local daemon_desc=$2
+  local daemon_invoke=$3
+
+
+  cat > $INIT_DIR/$daemon_name.conf << EOF
+description "$daemon_desc"
+
+start on runlevel [2345]
+stop on runlevel [!2345]
+
+respawn
+respawn limit 10 5
+
+expect daemon
+
+console none
+
+pre-start script
+  if [ ! -r $SCALR_CONFIG_FILE ]; then
+    logger -is -t "\$UPSTART_JOB" "ERROR: Config file is not readable"
+    exit 1
+  fi
+  mkdir -p $SCALR_PID_DIR
+end script
+
+script
+  sudo -u $SCALR_USER $daemon_invoke
+end script
+EOF
+# We can't use setuid / setgid: we need pre-start to run as root.
+}
+
+prepare_init "scalr-poller" "Scalr Stats Poller Daemon" "python -m scalrpy.stats_poller -c $SCALR_CONFIG_FILE -i 120 --start"
+prepare_init "scalr-messager" "Scalr Messaging Daemon" "python -m scalrpy.messaging -c $SCALR_CONFIG_FILE --start"
+
+service scalr-poller start
+service scalr-messager start
 
 echo
 echo "==========================="
