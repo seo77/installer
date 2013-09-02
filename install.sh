@@ -366,6 +366,23 @@ EOF
 crontab -u $SCALR_USER $CRON_FILE
 rm $CRON_FILE
 
+# Create $SCALR_PID_DIR
+echo
+echo "=================================="
+echo "    Configuring Init Services     "
+echo "=================================="
+echo
+
+cat > /etc/init/scalr-rundir.conf << EOF
+start on filesystem
+task
+script
+  mkdir -p $SCALR_PID_DIR
+  chown $SCALR_USER:$SCALR_USER $SCALR_PID_DIR
+end script
+EOF
+
+
 echo
 echo "==========================="
 echo "    Configuring Users     "
