@@ -39,8 +39,17 @@ if [ ! "$KERNEL_VERSION" '<' "$KERNEL_UNSUPPORTED_MIN" ] && [ ! "$KERNEL_VERSION
 fi
 
 
-# Import our trap lib
-source libtrap.sh
+# Import our libraries
+source lib/*
+
+echo
+echo "============================="
+echo "    Updating Repositories    "
+echo "============================="
+echo
+
+apt-get update -y
+
 
 # Add latest PHP repo
 echo
@@ -49,63 +58,17 @@ echo "    Installing PHP    "
 echo "======================"
 echo
 
-apt-get update
-apt-get install -y python-software-properties
-add-apt-repository -y ppa:ondrej/php5
-apt-get update && apt-get upgrade -y
-apt-get install -y php5 php5-mysql php5-curl php-pear php5-mcrypt php5-snmp
+install_php_core
 
 # Install common dependencies for PECL packages
 echo
-echo "===================================="
-echo "    Installing PECL Dependencies    "
-echo "===================================="
+echo "================================="
+echo "    Installing PHP Extensions    "
+echo "================================="
 echo
-apt-get install -y build-essential php5-dev libmagic-dev php-pear
 
-# Install PECL HTTP
-echo
-echo "============================"
-echo "    Installing PECL HTTP    "
-echo "============================"
-echo
-apt-get install -y libcurl3 libcurl4-gnutls-dev
-printf "\n\n\n\n" | pecl install pecl_http || true  # We need to "accept" the prompts.
-echo extension=http.so > /etc/php5/mods-available/http.ini
-php5enmod http
-
-# Install PECL RRD
-echo
-echo "==========================="
-echo "    Installing PECL RRD    "
-echo "==========================="
-echo
-apt-get install -y librrd-dev
-pecl install rrd || true
-echo extension=rrd.so > /etc/php5/mods-available/rrd.ini
-php5enmod rrd
-
-# Install PECL YAML
-echo
-echo "============================"
-echo "    Installing PECL YAML    "
-echo "============================"
-echo
-apt-get install -y libyaml-dev
-printf "\n" | pecl install yaml || true
-echo extension=yaml.so > /etc/php5/mods-available/yaml.ini
-php5enmod yaml
-
-# Install PECL SSH
-echo
-echo "==========================="
-echo "    Installing PECL SSH    "
-echo "==========================="
-echo
-apt-get install -y libssh2-1-dev
-printf "\n" | pecl install ssh2-beta || true
-echo extension=ssh2.so > /etc/php5/mods-available/ssh2.ini
-php5enmod ssh2
+install_php_extension_packages
+install_php_extension_pecls
 
 # Disable disabled functions
 echo
@@ -113,12 +76,8 @@ echo "==========================="
 echo "   Changing PHP settings   "
 echo "==========================="
 echo
-echo "removing disabled functions"
-sed -i '/^disable_functions/d' /etc/php5/apache2/php.ini
-sed -i '/^disable_functions/d' /etc/php5/cli/php.ini
-echo "enabling short open tags"
-sed -i -r 's/short_open_tag = .+/short_open_tag = On/g' /etc/php5/apache2/php.ini
-sed -i -r 's/short_open_tag = .+/short_open_tag = On/g' /etc/php5/cli/php.ini
+
+configure_php
 
 # Passwords
 echo

@@ -1,0 +1,75 @@
+#!/bin/bash
+# vim:et:ft=sh:sts=2:sw=2
+
+PHP_SAPIS="apache2 cli"
+
+### PHP / PPA ###
+
+install_php_core () {
+  apt-get install -y python-software-properties
+  add-apt-repository -y ppa:ondrej/php5
+  apt-get update && apt-get upgrade -y
+  apt-get install -y php5
+}
+
+
+### Extensions: Packages and PECL ###
+
+
+install_pecl_http () {
+  apt-get install -y libcurl3 libcurl4-gnutls-dev
+  printf "\n\n\n\n" | pecl install pecl_http || true  # We need to "accept" the prompts.
+  echo extension=http.so > /etc/php5/mods-available/http.ini
+  php5enmod http
+}
+
+install_pecl_rrd () {
+  apt-get install -y librrd-dev
+  pecl install rrd || true
+  echo extension=rrd.so > /etc/php5/mods-available/rrd.ini
+  php5enmod rrd
+}
+
+install_pecl_yaml () {
+  apt-get install -y libyaml-dev
+  printf "\n" | pecl install yaml || true
+  echo extension=yaml.so > /etc/php5/mods-available/yaml.ini
+  php5enmod yaml
+}
+
+install_pecl_ssh () {
+  apt-get install -y libssh2-1-dev
+  printf "\n" | pecl install ssh2-beta || true
+  echo extension=ssh2.so > /etc/php5/mods-available/ssh2.ini
+  php5enmod ssh2
+}
+
+install_pecl_shared () {
+  apt-get install -y build-essential php5-dev libmagic-dev php-pear
+}
+
+install_php_extension_pecls () {
+  install_pecl_shared
+  install_pecl_ssh
+  install_pecl_rrd
+  install_pecl_yaml
+  install_pecl_http
+}
+
+install_php_extension_packages () {
+  apt-get install -y php5-mysql php5-curl php-pear php5-mcrypt php5-snmp
+}
+
+
+### PHP CONFIGURATION OPTIONS ###
+
+configure_php () {
+  for sapi in $PHP_SAPIS
+  do
+    echo "Removing disabled functions for $sapi"
+    sed -i '/^disable_functions/d' /etc/php5/$sapi/php.ini
+    echo "Enabling short open tags for $sapi"
+    sed -i -r 's/short_open_tag = .+/short_open_tag = On/g' /etc/php5/$sapi/php.ini
+  done
+  
+}
