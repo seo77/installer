@@ -285,12 +285,34 @@ scalr:
     farm_procs: 2
     serv_thrds: 100
     rrd_thrds: 2
-    rrd_db_dir: '/tmp/rrd_db_dir'
-    images_path: '/var/www/graphics'
-    graphics_url: 'http://example.com/graphics'
+    rrd_db_dir: '/var/lib/rrdcached/db'
+    images_path: '$SCALR_APP/www/graphics'
+    graphics_url: '/graphics'
     log_file: '$SCALR_LOG_DIR/stats-poller.log'
     pid_file: '$SCALR_PID_DIR/stats-poller.pid'
 EOF
+
+# Install Rrdcached
+echo
+echo "==========================="
+echo "    Configuring rrdcached  "
+echo "==========================="
+echo
+apt-get install -y rrdcached
+
+cat >> /etc/default/rrdcached << EOF
+OPTS="-s www-data"
+OPTS="\$OPTS -l unix:/var/run/rrdcached.sock"
+OPTS="\$OPTS -j /var/lib/rrdcached/journal/ -F"
+OPTS="\$OPTS -b /var/lib/rrdcached/db/ -B"
+EOF
+
+mkdir $SCALR_APP/www/graphics/
+chown www-data $SCALR_APP/www/graphics/
+mkdir /var/lib/rrdcached/db/{x1x6,x2x7,x3x8,x4x9,x5x0}
+chown www-data /var/lib/rrdcached/db/{x1x6,x2x7,x3x8,x4x9,x5x0}
+
+service rrdcached restart
 
 # Install Virtualhost
 echo
