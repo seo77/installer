@@ -309,6 +309,11 @@ echo "==========================="
 echo "    Configuring rrdcached  "
 echo "==========================="
 echo
+# Workaround for https://bugs.launchpad.net/ubuntu/+source/rrdtool/+bug/985341
+if [ "$DISTRIB_RELEASE" '=' "12.04" ]; then
+    mkdir -p /var/lib/rrdcached/db /var/lib/rrdcached/journal
+    chown $(printf %q "$USER"):$(printf %q "$(groups | awk '{print $1}')") /var/lib/rrdcached/db /var/lib/rrdcached/journal
+fi
 apt-get install -y rrdcached
 
 cat >> /etc/default/rrdcached << EOF
