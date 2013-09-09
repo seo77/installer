@@ -49,6 +49,7 @@ echo "    Installing PHP    "
 echo "======================"
 echo
 
+apt-get update
 apt-get install -y python-software-properties
 add-apt-repository -y ppa:ondrej/php5
 apt-get update && apt-get upgrade -y
@@ -206,13 +207,23 @@ echo
 SCALR_LOG_DIR="/var/log/scalr"
 SCALR_PID_DIR="/var/run/scalr"
 SCALR_ID_FILE=$SCALR_APP/etc/id
+SCALR_CONFIG_FILE=$SCALR_APP/etc/config.yml
 
 # Required folders and files
 mkdir -p $SCALR_LOG_DIR $SCALR_PID_DIR
 touch $SCALR_ID_FILE
 chown $SCALR_USER:$SCALR_USER $SCALR_LOG_DIR $SCALR_PID_DIR $SCALR_ID_FILE
 
-cat > $SCALR_APP/etc/config.yml << EOF
+# Process "names" for Python scripts (useful later for start-stop-daemon matching)
+POLLER_NAME=poller
+POLLER_LOG=$SCALR_LOG_DIR/$POLLER_NAME.log
+POLLER_PID=$SCALR_PID_DIR/$POLLER_NAME.pid
+
+MESSAGING_NAME=messaging
+MESSAGING_LOG=$SCALR_LOG_DIR/$MESSAGING_NAME.log
+MESSAGING_PID=$SCALR_PID_DIR/$MESSAGING_NAME.pid
+
+cat > $SCALR_CONFIG_FILE << EOF
 scalr:
   connections:
     mysql: &connections_mysql
@@ -272,8 +283,8 @@ scalr:
         pool_recycle: 120
         pool_size: 10
     pool_size: 50
-    log_file: "$SCALR_LOG_DIR/messaging.log"
-    pid_file: "$SCALR_PID_DIR/messaging.pid"
+    log_file: "$MESSAGING_LOG"
+    pid_file: "$MESSAGING_PID"
   stats_poller:
     connections:
       mysql:
@@ -288,8 +299,8 @@ scalr:
     rrd_db_dir: '/var/lib/rrdcached/db'
     images_path: '$SCALR_APP/www/graphics'
     graphics_url: '/graphics'
-    log_file: '$SCALR_LOG_DIR/stats-poller.log'
-    pid_file: '$SCALR_PID_DIR/stats-poller.pid'
+    log_file: "$POLLER_LOG"
+    pid_file: "$POLLER_PID"
 EOF
 
 # Install Rrdcached
@@ -361,7 +372,7 @@ echo "============================="
 echo "    Configuring Cronjobs     "
 echo "============================="
 echo
-CRON_FILE=/tmp/$$-scalr-cron
+CRON_FILE=/tmp/$$-scalr-cron  #TODO: Fix insecure race condition on creation here
 crontab -u $SCALR_USER -l > $CRON_FILE.bak || true  # Back up, ignore errors
 
 cat > $CRON_FILE << EOF
@@ -380,12 +391,61 @@ cat > $CRON_FILE << EOF
 */2 * * * * /usr/bin/php -q $SCALR_APP/cron/cron.php --EBSManager
 */20 * * * * /usr/bin/php -q $SCALR_APP/cron/cron.php --RolesQueue
 */5 * * * * /usr/bin/php -q $SCALR_APP/cron-ng/cron.php --DbMsrMaintenance
-*/5 * * * * python -m scalrpy.stats_poller -c $SCALR_APP/etc/config.yml -i 120 --start
-*/5 * * * * python -m scalrpy.messaging -c $SCALR_APP/etc/config.yml --start
 EOF
 
 crontab -u $SCALR_USER $CRON_FILE
 rm $CRON_FILE
+
+echo
+echo "===================================="
+echo "    Configuring Daemon Services     "
+echo "===================================="
+echo
+
+INIT_DIR=/etc/init
+
+prepare_init () {
+  local daemon_name=$1
+  local daemon_desc=$2
+  local daemon_pidfile=$3
+  local daemon_proc=$4
+  local daemon_args=$5
+
+
+  cat > $INIT_DIR/$daemon_name.conf << EOF
+description "$daemon_desc"
+
+start on runlevel [2345]
+stop on runlevel [!2345]
+
+respawn
+respawn limit 10 5
+
+expect daemon
+
+console none
+
+pre-start script
+  if [ ! -r $SCALR_CONFIG_FILE ]; then
+    logger -is -t "\$UPSTART_JOB" "ERROR: Config file is not readable"
+    exit 1
+  fi
+  mkdir -p $SCALR_PID_DIR
+  chown $SCALR_USER:$SCALR_USER $SCALR_PID_DIR
+end script
+
+exec start-stop-daemon --start --chuid $SCALR_USER --pidfile $daemon_pidfile --exec $daemon_proc -- $daemon_args
+EOF
+# We can't use setuid / setgid: we need pre-start to run as root.
+}
+
+PYTHON=`command -v python`
+
+prepare_init "$POLLER_NAME" "Scalr Stats Poller Daemon" "$POLLER_PID" "$PYTHON" "-m scalrpy.stats_poller -c $SCALR_CONFIG_FILE --start --interval 120"
+prepare_init "$MESSAGING_NAME" "Scalr Messaging Daemon" "$MESSAGING_PID" "$PYTHON" "-m scalrpy.messaging -c $SCALR_CONFIG_FILE --start"
+
+service $POLLER_NAME start
+service $MESSAGING_NAME start
 
 echo
 echo "==========================="
@@ -409,7 +469,7 @@ chown $SCALR_USER:$SCALR_USER $CRYPTOKEY_PATH
 set +o nounset
 trap_append "chown root:root $CRYPTOKEY_PATH" SIGINT SIGTERM EXIT  # Restore ownership of the cryptokey
 set -o nounset
-sudo -u www-data php $SCALR_APP/www/testenvironment.php || true # We don't want to exit on an error
+sudo -u $SCALR_USER php $SCALR_APP/www/testenvironment.php || true # We don't want to exit on an error
 
 
 echo
@@ -439,6 +499,19 @@ echo "    Next steps                     "
 echo "==================================="
 echo
 
-echo "1. Some optional modules have not been installed: RRD, DNS, and LDAP"
-echo "2. You should configure security settings in $SCALR_APP/etc/config.yml"
-echo "3. Scalr is available on this server on port 80"
+
+echo "Configuration"
+echo "-------------"
+echo "    Some optional modules have not been installed: RRD, DNS, and LDAP"
+echo "    You should configure security settings in $SCALR_APP/etc/config.yml"
+echo
+
+echo "Quickstart Roles"
+echo "----------------"
+echo "Scalr provides, free of charge, up-to-date role images for AWS"
+echo "Those will help you get started with Scalr. To get access:"
+echo "    1. Copy the contents of $SCALR_ID_FILE: `cat $SCALR_ID_FILE`"
+echo "    2. Submit them to this form: http://goo.gl/qD4mpa"
+echo "    3. Run: \$ php $SCALR_APP/tools/sync_shared_roles.php"
+
+echo
