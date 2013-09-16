@@ -317,16 +317,16 @@ fi
 apt-get install -y rrdcached
 
 cat >> /etc/default/rrdcached << EOF
-OPTS="-s www-data"
+OPTS="-s $SCALR_USER"
 OPTS="\$OPTS -l unix:/var/run/rrdcached.sock"
 OPTS="\$OPTS -j /var/lib/rrdcached/journal/ -F"
 OPTS="\$OPTS -b /var/lib/rrdcached/db/ -B"
 EOF
 
 mkdir $SCALR_APP/www/graphics/
-chown www-data $SCALR_APP/www/graphics/
+chown $SCALR_USER $SCALR_APP/www/graphics/
 mkdir /var/lib/rrdcached/db/{x1x6,x2x7,x3x8,x4x9,x5x0}
-chown www-data /var/lib/rrdcached/db/{x1x6,x2x7,x3x8,x4x9,x5x0}
+chown $SCALR_USER /var/lib/rrdcached/db/{x1x6,x2x7,x3x8,x4x9,x5x0}
 
 service rrdcached restart
 
@@ -507,7 +507,7 @@ echo
 
 echo "Configuration"
 echo "-------------"
-echo "    Some optional modules have not been installed: RRD, DNS, and LDAP"
+echo "    Some optional modules have not been installed: DNS, LDAP"
 echo "    You should configure security settings in $SCALR_APP/etc/config.yml"
 echo
 
