@@ -296,12 +296,39 @@ scalr:
     farm_procs: 2
     serv_thrds: 100
     rrd_thrds: 2
-    rrd_db_dir: '/tmp/rrd_db_dir'
-    images_path: '/var/www/graphics'
-    graphics_url: 'http://example.com/graphics'
+    rrd_db_dir: '/var/lib/rrdcached/db'
+    images_path: '$SCALR_APP/www/graphics'
+    graphics_url: '/graphics'
     log_file: "$POLLER_LOG"
     pid_file: "$POLLER_PID"
 EOF
+
+# Install Rrdcached
+echo
+echo "==========================="
+echo "    Configuring rrdcached  "
+echo "==========================="
+echo
+# Workaround for https://bugs.launchpad.net/ubuntu/+source/rrdtool/+bug/985341
+if [ "$DISTRIB_RELEASE" '=' "12.04" ]; then
+    mkdir -p /var/lib/rrdcached/db /var/lib/rrdcached/journal
+    chown $(printf %q "$USER"):$(printf %q "$(groups | awk '{print $1}')") /var/lib/rrdcached/db /var/lib/rrdcached/journal
+fi
+apt-get install -y rrdcached
+
+cat >> /etc/default/rrdcached << EOF
+OPTS="-s $SCALR_USER"
+OPTS="\$OPTS -l unix:/var/run/rrdcached.sock"
+OPTS="\$OPTS -j /var/lib/rrdcached/journal/ -F"
+OPTS="\$OPTS -b /var/lib/rrdcached/db/ -B"
+EOF
+
+mkdir $SCALR_APP/www/graphics/
+chown $SCALR_USER $SCALR_APP/www/graphics/
+mkdir /var/lib/rrdcached/db/{x1x6,x2x7,x3x8,x4x9,x5x0}
+chown $SCALR_USER /var/lib/rrdcached/db/{x1x6,x2x7,x3x8,x4x9,x5x0}
+
+service rrdcached restart
 
 # Install Virtualhost
 echo
@@ -480,7 +507,7 @@ echo
 
 echo "Configuration"
 echo "-------------"
-echo "    Some optional modules have not been installed: RRD, DNS, and LDAP"
+echo "    Some optional modules have not been installed: DNS, LDAP"
 echo "    You should configure security settings in $SCALR_APP/etc/config.yml"
 echo
 
