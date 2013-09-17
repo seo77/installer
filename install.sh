@@ -454,6 +454,16 @@ service $MESSAGING_NAME start
 
 echo
 echo "==========================="
+echo "    Configuring System     "
+echo "==========================="
+echo
+
+echo "kernel.msgmnb = 524288" > /etc/sysctl.d/60-scalr.conf
+
+service procps start
+
+echo
+echo "==========================="
 echo "    Configuring Users     "
 echo "==========================="
 echo
