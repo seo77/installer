@@ -202,8 +202,8 @@ cd $curr_dir
 
 # We have to create the cache folder
 SCALR_CACHE=$SCALR_APP/cache
-mkdir $SCALR_CACHE
-chown $WEB_USER:$SCALR_GROUP $SCALR_CACHE
+mkdir --mode=770 $SCALR_CACHE
+chown $SERVICE_USER:$SCALR_GROUP $SCALR_CACHE
 
 # Configure database
 echo
@@ -227,9 +227,12 @@ SCALR_ID_FILE=$SCALR_APP/etc/id
 SCALR_CONFIG_FILE=$SCALR_APP/etc/config.yml
 
 # Required folders and files
-mkdir -p $SCALR_LOG_DIR $SCALR_PID_DIR
+mkdir --mode=775 --parents $SCALR_LOG_DIR $SCALR_PID_DIR
+chown $SERVICE_USER:$SCALR_GROUP $SCALR_LOG_DIR $SCALR_PID_DIR
+
 touch $SCALR_ID_FILE
-chown $WEB_USER:$SCALR_GROUP $SCALR_LOG_DIR $SCALR_PID_DIR $SCALR_ID_FILE
+chown $SERVICE_USER:$SCALR_GROUP $SCALR_ID_FILE
+chmod 664 $SCALR_ID_FILE
 
 # Process "names" for Python scripts (useful later for start-stop-daemon matching)
 POLLER_NAME=poller
@@ -240,6 +243,7 @@ MESSAGING_NAME=messaging
 MESSAGING_LOG=$SCALR_LOG_DIR/$MESSAGING_NAME.log
 MESSAGING_PID=$SCALR_PID_DIR/$MESSAGING_NAME.pid
 
+# TODO: Here again, race condition
 cat > $SCALR_CONFIG_FILE << EOF
 scalr:
   connections:
@@ -320,6 +324,9 @@ scalr:
     pid_file: "$POLLER_PID"
 EOF
 
+chown $SERVICE_USER:$SCALR_GROUP $SCALR_CONFIG_FILE
+chmod 660 $SCALR_CONFIG_FILE
+
 # Install Rrdcached
 echo
 echo "==========================="
@@ -340,9 +347,10 @@ OPTS="\$OPTS -j /var/lib/rrdcached/journal/ -F"
 OPTS="\$OPTS -b /var/lib/rrdcached/db/ -B"
 EOF
 
-mkdir $SCALR_APP/www/graphics/
+mkdir --mode=775 $SCALR_APP/www/graphics/
 chown $SERVICE_USER:$SCALR_GROUP $SCALR_APP/www/graphics/
-mkdir /var/lib/rrdcached/db/{x1x6,x2x7,x3x8,x4x9,x5x0}
+
+mkdir --mode=775 /var/lib/rrdcached/db/{x1x6,x2x7,x3x8,x4x9,x5x0}
 chown $SERVICE_USER:$SCALR_GROUP /var/lib/rrdcached/db/{x1x6,x2x7,x3x8,x4x9,x5x0}
 
 service rrdcached restart
@@ -452,7 +460,7 @@ pre-start script
     logger -is -t "\$UPSTART_JOB" "ERROR: Config file is not readable"
     exit 1
   fi
-  mkdir -p $SCALR_PID_DIR
+  mkdir --mode=775 --parents $SCALR_PID_DIR
   chown $SERVICE_USER:$SCALR_GROUP $SCALR_PID_DIR
 end script
 
@@ -494,12 +502,14 @@ echo "==========================="
 echo "    Validating Install     "
 echo "==========================="
 echo
-# We need to let the testenvironment command create the key
+
 CRYPTOKEY_PATH=$SCALR_APP/etc/.cryptokey
-touch $CRYPTOKEY_PATH
-chown $WEB_USER:$SCALR_GROUP $CRYPTOKEY_PATH
+touch $CRYPTOKEY_PATH  # TODO: Race condition
+chown $SERVICE_USER:$SCALR_GROUP $CRYPTOKEY_PATH
+chmod 660 $CRYPTOKEY_PATH
+
 set +o nounset
-trap_append "chown $SERVICE_USER:$SCALR_GROUP $CRYPTOKEY_PATH" SIGINT SIGTERM EXIT  # Restore ownership of the cryptokey
+trap_append "chmod 440 $CRYPTOKEY_PATH" SIGINT SIGTERM EXIT  # Restore ownership of the cryptokey
 set -o nounset
 
 for user in $SERVICE_USER $WEB_USER
