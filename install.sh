@@ -560,5 +560,10 @@ echo "Those will help you get started with Scalr. To get access:"
 echo "    1. Copy the contents of $SCALR_ID_FILE: `cat $SCALR_ID_FILE`"
 echo "    2. Submit them to this form: http://goo.gl/qD4mpa"
 echo "    3. Run: \$ php $SCALR_APP/tools/sync_shared_roles.php"
+echo
+
+echo "Creating Users"
+echo "--------------"
+echo "Once logged in as an admin, you will need to create a new user profile to use Scalr"
 
 echo
