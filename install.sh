@@ -88,7 +88,7 @@ echo "    Installing PECL HTTP    "
 echo "============================"
 echo
 apt-get install -y libcurl3 libcurl4-gnutls-dev
-printf "\n\n\n\n" | pecl install pecl_http || true  # We need to "accept" the prompts.
+printf "\n\n\n\n" | pecl install pecl_http-1.7.6 || true  # We need to "accept" the prompts.
 echo extension=http.so > /etc/php5/mods-available/http.ini
 php5enmod http
 
