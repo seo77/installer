@@ -67,9 +67,19 @@ echo "    Installing PHP    "
 echo "======================"
 echo
 
+MULTIVERSE_REPO_FILE=/etc/apt/sources.list.d/multiverse.list
+
 apt-get update
 apt-get install -y python-software-properties
 add-apt-repository -y ppa:ondrej/php5
+
+cat > $MULTIVERSE_REPO_FILE << EOF
+deb http://archive.ubuntu.com/ubuntu/ $DISTRIB_CODENAME multiverse
+deb-src http://archive.ubuntu.com/ubuntu/ $DISTRIB_CODENAME multiverse
+deb http://archive.ubuntu.com/ubuntu/ $DISTRIB_CODENAME-updates multiverse
+deb-src http://archive.ubuntu.com/ubuntu/ $DISTRIB_CODENAME-updates multiverse
+EOF
+
 apt-get update && apt-get upgrade -y
 apt-get install -y php5 php5-mysql php5-curl php-pear php5-mcrypt php5-snmp
 
@@ -137,6 +147,15 @@ sed -i '/^disable_functions/d' /etc/php5/cli/php.ini
 echo "enabling short open tags"
 sed -i -r 's/short_open_tag = .+/short_open_tag = On/g' /etc/php5/apache2/php.ini
 sed -i -r 's/short_open_tag = .+/short_open_tag = On/g' /etc/php5/cli/php.ini
+
+# SNMP
+echo
+echo "==========================="
+echo "   Downloading SNMP MIBs   "
+echo "==========================="
+echo
+echo "Updating SNMP MIBs"
+apt-get install -y snmp-mibs-downloader
 
 # Passwords
 echo
