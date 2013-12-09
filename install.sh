@@ -517,6 +517,8 @@ do
   sudo -u $user php $SCALR_APP/www/testenvironment.php || true # We don't want to exit on an error
 done
 
+echo "i$(cat $SCALR_ID_FILE)" > $SCALR_ID_FILE
+
 
 echo
 echo "=============================="
