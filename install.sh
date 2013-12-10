@@ -277,6 +277,9 @@ scalr:
   ui:
     support_url: 'https://groups.google.com/d/forum/scalr-discuss'
     wiki_url: 'http://wiki.scalr.com'
+  email:
+    address: ~
+    name: ~
   pma_instance_ip_address: '127.0.0.1'
   auth_mode: scalr
   instances_connection_policy: public
