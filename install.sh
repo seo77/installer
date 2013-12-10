@@ -215,7 +215,7 @@ apt-get install -y git
 git clone $SCALR_REPO $SCALR_INSTALL
 
 # We have to be in the correct folder to install.
-apt-get install -y python-setuptools
+apt-get install -y python-setuptools python-dev
 curr_dir=`pwd`
 cd $SCALR_APP/python
 python setup.py install
