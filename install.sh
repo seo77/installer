@@ -214,13 +214,6 @@ apt-get install -y git
 
 git clone $SCALR_REPO $SCALR_INSTALL
 
-# We have to be in the correct folder to install.
-apt-get install -y python-setuptools python-dev
-curr_dir=`pwd`
-cd $SCALR_APP/python
-python setup.py install
-cd $curr_dir
-
 # We have to create the cache folder
 SCALR_CACHE=$SCALR_APP/cache
 mkdir --mode=770 $SCALR_CACHE
@@ -455,6 +448,13 @@ echo "===================================="
 echo "    Configuring Daemon Services     "
 echo "===================================="
 echo
+
+# Install the Python services
+apt-get install -y python-setuptools python-dev m2crypto snmp libsnmp-python python-rrdtool
+curr_dir=`pwd`
+cd $SCALR_APP/python
+python setup.py install
+cd $curr_dir
 
 INIT_DIR=/etc/init
 
