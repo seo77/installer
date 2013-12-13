@@ -336,7 +336,7 @@ scalr:
   load_statistics:
     connections:
       plotter:
-        host: '$HOST_IP'
+        host: 'http://$HOST_IP'
     rrd_dir: '/var/lib/rrdcached/db'
     img_dir: '$SCALR_APP/www/graphics'
     img_url: '/graphics'
