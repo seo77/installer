@@ -399,18 +399,17 @@ cat > $CRON_FILE << EOF
 * * * * * /usr/bin/php -q $SCALR_APP/cron/cron.php --Scheduler
 */5 * * * * /usr/bin/php -q $SCALR_APP/cron/cron.php --UsageStatsPoller
 */2 * * * * /usr/bin/php -q $SCALR_APP/cron-ng/cron.php --Scaling
-* * * * * /usr/bin/php -q $SCALR_APP/cron/cron.php --DBQueueEvent
 */2 * * * * /usr/bin/php -q $SCALR_APP/cron/cron.php --SzrMessaging
 */2 * * * * /usr/bin/php -q $SCALR_APP/cron/cron.php --BundleTasksManager
-*/2 * * * * /usr/bin/php -q $SCALR_APP/cron-ng/cron.php --DeployManager
 */15 * * * * /usr/bin/php -q $SCALR_APP/cron-ng/cron.php --MetricCheck
 */2 * * * * /usr/bin/php -q $SCALR_APP/cron-ng/cron.php --Poller
-*/10 * * * * /usr/bin/php -q $SCALR_APP/cron/cron.php --MySQLMaintenance
 * * * * * /usr/bin/php -q $SCALR_APP/cron/cron.php --DNSManagerPoll
 17 5 * * * /usr/bin/php -q $SCALR_APP/cron/cron.php --RotateLogs
 */2 * * * * /usr/bin/php -q $SCALR_APP/cron/cron.php --EBSManager
 */20 * * * * /usr/bin/php -q $SCALR_APP/cron/cron.php --RolesQueue
 */5 * * * * /usr/bin/php -q $SCALR_APP/cron-ng/cron.php --DbMsrMaintenance
+*/20 * * * * /usr/bin/php -q $SCALR_APP/cron-ng/cron.php --LeaseManager
+*/1 * * * * /usr/bin/php -q $SCALR_APP/cron-ng/cron.php --ServerTerminate
 EOF
 
 crontab -u $SERVICE_USER $CRON_FILE
