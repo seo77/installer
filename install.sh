@@ -45,6 +45,7 @@ function valid_ip() {
 }
 
 # Prompt for the server's IP
+HOST_IP=${HOST_IP-}
 if [ -z "$HOST_IP" ] || ! valid_ip "$HOST_IP" ; then
 
   echo "Enter an IP for this host that will be accessible from Cloud instances (e.g. this instance's Public IP)"
