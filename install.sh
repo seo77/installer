@@ -28,6 +28,45 @@ if [ $DISTRIB_ID != "Ubuntu" ] || [ "$DISTRIB_RELEASE" '<' "12.04" ]; then
 fi
 
 
+function valid_ip() {
+    local  ip=$1
+    local  stat=1
+
+    if [[ $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+        OIFS=$IFS
+        IFS='.'
+        ip=($ip)
+        IFS=$OIFS
+        [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 \
+            && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
+        stat=$?
+    fi
+    return $stat
+}
+
+# Prompt for the server's IP
+if [ -z "$HOST_IP" ] || ! valid_ip "$HOST_IP" ; then
+
+  echo "Enter an IP for this host that will be accessible from Cloud instances (e.g. this instance's Public IP)"
+  echo "Note: You will be able to change this value later"
+
+  invalid_ip=true
+  has_errored=false
+
+  while $invalid_ip;
+  do
+    if $has_errored ; then
+      echo "Error: '$HOST_IP' is not a valid IP"
+      echo "Hint: if you're unsure, enter 127.0.0.1 and change it later in the configuration file!"
+    fi
+    read -p "Host IP> " -e HOST_IP
+    has_errored=true
+    if valid_ip $HOST_IP; then invalid_ip=false; fi
+  done
+
+fi
+
+
 # Import our trap lib
 source libtrap.sh
 
@@ -269,10 +308,10 @@ scalr:
    - rackspacengus
   endpoint:
     scheme: http
-    host: 'endpoint url here'
+    host: '$HOST_IP'
   aws:
     security_group_name: 'scalr.ip-pool'
-    ip_pool: ['8.8.8.8/32']
+    ip_pool: ['$HOST_IP/32']
     security_group_prefix: 'scalr.'
   billing:
     enabled: no
@@ -559,7 +598,7 @@ echo
 echo "Configuration"
 echo "-------------"
 echo "    Some optional modules have not been installed: DNS, LDAP"
-echo "    You should configure security settings in $SCALR_APP/etc/config.yml"
+echo "    If $HOST_IP is not a valid Public IP for this instance, you must settings in $SCALR_APP/etc/config.yml"
 echo
 
 echo "Quickstart Roles"
