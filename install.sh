@@ -109,7 +109,7 @@ deb-src http://archive.ubuntu.com/ubuntu/ $DISTRIB_CODENAME-updates multiverse
 EOF
 
 apt-get update && apt-get upgrade -y
-apt-get install -y php5 php5-mysql php5-curl php-pear php5-mcrypt php5-snmp
+apt-get install -y php5 php5-mysql php5-curl php5-mcrypt php5-snmp
 
 # Install common dependencies for PECL packages
 echo
