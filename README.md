@@ -23,7 +23,7 @@ Run the following, as root.
     bash install.sh
 
 Note: we recommend that you run this command using GNU screen, so that the
-installation process isn't interrupted if your SSH drops drops.
+installation process isn't interrupted if your SSH connection drops.
 
 
 ### Use ###
