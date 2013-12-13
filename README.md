@@ -22,23 +22,15 @@ Run the following, as root.
 
     bash install.sh
 
-
-### Configure ###
-
-Edit `/var/scalr/app/etc/config.yml`, and configure the following keys:
-
-  + `scalr.endpoint.scheme`: The protocol over which Scalr should be accessed
-    on your server (HTTP if you didn't set up SSL)
-  + `scalr.endpoint.host`: A Host (or IP) at which the server you installed
-    Scalr on can be reached from your Cloud(s).
-  + `scalr.aws.ip_pool`: A CIDR-formatted subnet containing the IP of your
-    Scalr server (only if using AWS)
+Note: we recommend that you run this command using GNU screen, so that the
+installation process isn't interrupted if your SSH drops drops.
 
 
-### Run it ###
+### Use ###
 
 Visit your server on port 80 to get started. The output of the install script
 will contain your login credentials.
+
 
 
 Supported OSes
