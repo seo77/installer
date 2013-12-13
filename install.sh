@@ -291,7 +291,7 @@ scalr:
     support_url: 'https://groups.google.com/d/forum/scalr-discuss'
     wiki_url: 'http://wiki.scalr.com'
   email:
-    address: "scalr@example.com"
+    address: "scalr@scalr.mydomain.com"
     name: "Scalr Service"
   pma_instance_ip_address: '127.0.0.1'
   auth_mode: scalr
