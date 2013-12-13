@@ -450,7 +450,8 @@ echo "===================================="
 echo
 
 # Install the Python services
-apt-get install -y python-setuptools python-dev m2crypto snmp libsnmp-python python-rrdtool
+apt-get install -y python-setuptools python-dev m2crypto snmp libsnmp-python python-rrdtool python-pip
+pip install cherrypy
 curr_dir=`pwd`
 cd $SCALR_APP/python
 python setup.py install
