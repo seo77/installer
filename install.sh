@@ -600,7 +600,7 @@ echo
 echo "Configuration"
 echo "-------------"
 echo "    Some optional modules have not been installed: DNS, LDAP"
-echo "    If $HOST_IP is not a valid Public IP for this instance, you must settings in $SCALR_APP/etc/config.yml"
+echo "    If $HOST_IP is not a valid Public IP for this instance, you must edit your settings in $SCALR_APP/etc/config.yml"
 echo
 
 echo "Quickstart Roles"
