@@ -296,7 +296,7 @@ scalr:
     name: "Scalr Service"
   pma_instance_ip_address: '127.0.0.1'
   auth_mode: scalr
-  instances_connection_policy: public
+  instances_connection_policy: auto
   allowed_clouds:
    - ec2
    - openstack
