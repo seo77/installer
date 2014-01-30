@@ -1,3 +1,7 @@
+NOTE: This version of the installer only supports Ubuntu 12.04 and up, but if
+you are using another OS, such as CentOS or RHEL, you can try the beta
+[next-generation installer](https://github.com/Scalr/installer-ng).
+
 Scalr Installer
 ===============
 
